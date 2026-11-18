@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>สมุดรับจ่ายร้านตัดผม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#14213d;--paper:#f2f4f8;--card:#fff;--line:#dde2ec;--red:#c8372d;--blue:#2b59c3;--in:#1f8a5b;--out:#c8372d;--muted:#5d6881}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:'Sarabun',sans-serif;font-size:16px;line-height:1.5}
+h1,h2,.num,button{font-family:'Prompt',sans-serif}
+.pole{height:14px;background:repeating-linear-gradient(-45deg,var(--red) 0 14px,#fff 14px 28px,var(--blue) 28px 42px,#fff 42px 56px)}
+header{background:var(--ink);color:#fff;padding:18px 20px}
+.wrap{max-width:1080px;margin:0 auto}
+header .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{margin:0;font-size:1.5rem;font-weight:700}
+header small{color:#b9c3dc}
+#conn{font-size:.85rem;padding:4px 12px;border-radius:99px;background:#26365e}
+#conn.ok{background:#1f8a5b}#conn.demo{background:#a8741a}
+main{padding:20px}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:8px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.box span{color:var(--muted);font-size:.9rem}
+.box .num{font-size:1.7rem;font-weight:700;display:block}
+.in{color:var(--in)}.out{color:var(--out)}
+.split{color:var(--muted);font-size:.92rem;margin:0 0 20px}
+.layout{display:grid;grid-template-columns:360px 1fr;gap:20px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
+h2{margin:0 0 14px;font-size:1.15rem}
+label{display:block;font-weight:500;margin:12px 0 4px;font-size:.95rem}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:3px solid #9db6f0;outline-offset:1px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{padding:11px;border:2px solid var(--line);background:#fff;border-radius:8px;font-size:1rem;cursor:pointer;color:var(--muted)}
+.seg button.on.i{border-color:var(--in);background:#e6f5ee;color:var(--in)}
+.seg button.on.o{border-color:var(--out);background:#fbe9e7;color:var(--out)}
+.save{width:100%;margin-top:18px;padding:13px;border:0;border-radius:8px;background:var(--blue);color:#fff;font-size:1.05rem;font-weight:600;cursor:pointer}
+.save:disabled{opacity:.6;cursor:wait}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.bar h2{margin:0}.bar input{width:auto}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th{text-align:left;color:var(--muted);font-weight:500;padding:8px;border-bottom:2px solid var(--line);white-space:nowrap}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.amt{text-align:right;font-weight:600;white-space:nowrap}
+td small{color:var(--muted);display:block}
+.tag{display:inline-block;padding:1px 9px;border-radius:99px;font-size:.8rem;background:#e8edf8;color:var(--blue)}
+.del{border:0;background:none;color:var(--muted);cursor:pointer;font-size:1.1rem}.del:hover{color:var(--red)}
+.empty{text-align:center;color:var(--muted);padding:28px 0}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+@media(max-width:860px){.layout{grid-template-columns:1fr}.sum{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="pole"></div>
+<header><div class="wrap">
+  <div><h1>สมุดรับจ่ายร้านตัดผม</h1><small>ร้านตัดผมชาย / หญิง</small></div>
+  <span id="conn">กำลังเชื่อมต่อ…</span>
+</div></header>
+
+<main class="wrap">
+  <div class="sum">
+    <div class="box"><span>รายรับ</span><b class="num in" id="sIn">0</b></div>
+    <div class="box"><span>รายจ่าย</span><b class="num out" id="sOut">0</b></div>
+    <div class="box"><span>คงเหลือสุทธิ</span><b class="num" id="sNet">0</b></div>
+  </div>
+  <p class="split" id="split"></p>
+
+  <div class="layout">
+    <section class="panel">
+      <h2>บันทึกรายการใหม่</h2>
+      <div class="seg" id="typeSeg">
+        <button type="button" class="i on" data-t="รายรับ">รายรับ</button>
+        <button type="button" class="o" data-t="รายจ่าย">รายจ่าย</button>
+      </div>
+      <div class="two">
+        <div><label for="date">วันที่</label><input type="date" id="date"></div>
+        <div><label for="amount">จำนวนเงิน (บาท)</label><input type="number" id="amount" min="0" step="1" inputmode="decimal" placeholder="0"></div>
+      </div>
+      <label for="category">หมวดหมู่</label><select id="category"></select>
+      <label for="detail">รายละเอียด</label><input id="detail" placeholder="เช่น ตัดผมทรงสุภาพ">
+      <div class="two">
+        <div><label for="gender">กลุ่มลูกค้า</label>
+          <select id="gender"><option>ชาย</option><option>หญิง</option><option>ไม่ระบุ</option></select></div>
+        <div><label for="method">ช่องทางชำระเงิน</label>
+          <select id="method"><option>เงินสด</option><option>โอนเงิน</option><option>QR พร้อมเพย์</option><option>บัตรเครดิต</option></select></div>
+      </div>
+      <div class="two">
+        <div><label for="staff">ช่าง / ผู้บันทึก</label><input id="staff" list="staffList" placeholder="ชื่อช่าง"><datalist id="staffList"></datalist></div>
+        <div><label for="customer">ชื่อลูกค้า</label><input id="customer" placeholder="ไม่ใส่ก็ได้"></div>
+      </div>
+      <label for="note">หมายเหตุ</label><textarea id="note" rows="2"></textarea>
+      <button class="save" id="saveBtn">บันทึกรายการ</button>
+    </section>
+
+    <section class="panel">
+      <div class="bar">
+        <h2>รายการทั้งหมด</h2>
+        <input type="month" id="month" aria-label="เลือกเดือน">
+      </div>
+      <div class="tw"><table>
+        <thead><tr><th>วันที่</th><th>รายการ</th><th>ช่าง</th><th>ชำระ</th><th style="text-align:right">จำนวนเงิน</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table></div>
+    </section>
+  </div>
+</main>
+<div id="toast" role="status"></div>
+
+<script>
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbzR_d8EKr-mgBIyKndpzZcIyo7AWhkb6-3hGzfmtgaWlduCOktnfXBCHzy2rxbJvZFDoQ/exec";
+
+const CATS={
+  "รายรับ":["ตัดผมชาย","ตัดผมหญิง","สระ-ไดร์","ทำสีผม","ดัด / ยืดผม","ทรีตเมนต์","โกนหนวด / แต่งหนวด","จำหน่ายสินค้า","รายรับอื่นๆ"],
+  "รายจ่าย":["ซื้อผลิตภัณฑ์ / น้ำยา","อุปกรณ์ / ปัตตาเลี่ยน","ค่าแรงช่าง / เงินเดือน","ค่าเช่าร้าน","ค่าน้ำ-ค่าไฟ","การตลาด / โฆษณา","ซ่อมบำรุง","รายจ่ายอื่นๆ"]
+};
+let type="รายรับ", rows=[], demo=false;
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n||0).toLocaleString("th-TH");
+const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2400)}
+function setConn(cls,txt){const c=$("conn");c.className=cls;c.textContent=txt}
+
+function fillCats(){$("category").innerHTML=CATS[type].map(c=>`<option>${c}</option>`).join("")}
+document.querySelectorAll("#typeSeg button").forEach(b=>b.onclick=()=>{
+  type=b.dataset.t;
+  document.querySelectorAll("#typeSeg button").forEach(x=>x.classList.toggle("on",x===b));
+  fillCats();
+});
+
+async function api(method,body){
+  const opt=method==="GET"?{}:{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)};
+  const url=method==="GET"?SCRIPT_URL+"?action=list":SCRIPT_URL;
+  const r=await fetch(url,opt);
+  return r.json();
+}
+
+async function load(){
+  if(!SCRIPT_URL.startsWith("http")){demo=true;setConn("demo","โหมดทดลอง (ยังไม่ได้ใส่ลิงก์สคริปต์)");render();return}
+  try{
+    const d=await api("GET");
+    rows=d.rows||[];setConn("ok","เชื่อมต่อ Google Sheets แล้ว");render();
+  }catch(e){setConn("demo","เชื่อมต่อไม่ได้ ตรวจสอบลิงก์สคริปต์");toast("โหลดข้อมูลไม่สำเร็จ")}
+}
+
+$("saveBtn").onclick=async()=>{
+  const amount=parseFloat($("amount").value);
+  if(!$("date").value||!(amount>0)){toast("กรุณากรอกวันที่และจำนวนเงิน");return}
+  const row={id:"R"+Date.now(),date:$("date").value,type,category:$("category").value,detail:$("detail").value.trim(),
+    gender:$("gender").value,method:$("method").value,staff:$("staff").value.trim(),customer:$("customer").value.trim(),
+    amount,note:$("note").value.trim()};
+  const btn=$("saveBtn");btn.disabled=true;btn.textContent="กำลังบันทึก…";
+  try{
+    if(!demo){const r=await api("POST",{action:"add",row});if(!r.ok)throw 0}
+    rows.push(row);render();toast("บันทึกรายการแล้ว");
+    ["amount","detail","customer","note"].forEach(k=>$(k).value="");
+  }catch(e){toast("บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง")}
+  btn.disabled=false;btn.textContent="บันทึกรายการ";
+};
+
+async function del(id){
+  if(!confirm("ต้องการลบรายการนี้ใช่หรือไม่?"))return;
+  try{
+    if(!demo){const r=await api("POST",{action:"delete",id});if(!r.ok)throw 0}
+    rows=rows.filter(r=>r.id!==id);render();toast("ลบรายการแล้ว");
+  }catch(e){toast("ลบไม่สำเร็จ ลองใหม่อีกครั้ง")}
+}
+
+function render(){
+  const m=$("month").value;
+  const list=rows.filter(r=>!m||String(r.date).slice(0,7)===m).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  let i=0,o=0,iM=0,iF=0;
+  list.forEach(r=>{const a=+r.amount||0;if(r.type==="รายรับ"){i+=a;if(r.gender==="ชาย")iM+=a;if(r.gender==="หญิง")iF+=a}else o+=a});
+  $("sIn").textContent=fmt(i);$("sOut").textContent=fmt(o);
+  const n=$("sNet");n.textContent=fmt(i-o);n.className="num "+(i-o<0?"out":"in");
+  $("split").textContent=`รายรับจากลูกค้าชาย ${fmt(iM)} บาท  |  ลูกค้าหญิง ${fmt(iF)} บาท`;
+  $("staffList").innerHTML=[...new Set(rows.map(r=>r.staff).filter(Boolean))].map(s=>`<option value="${esc(s)}">`).join("");
+  $("rows").innerHTML=list.length?list.map(r=>{
+    const d=new Date(r.date+"T00:00:00").toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"});
+    const sign=r.type==="รายรับ"?"+":"−";
+    return `<tr><td>${d}</td>
+      <td><span class="tag">${esc(r.category)}</span> ${esc(r.detail)}<small>${[r.gender!=="ไม่ระบุ"&&r.type==="รายรับ"?"ลูกค้า"+esc(r.gender):"",esc(r.customer),esc(r.note)].filter(Boolean).join(" · ")}</small></td>
+      <td>${esc(r.staff)||"-"}</td><td>${esc(r.method)}</td>
+      <td class="amt ${r.type==="รายรับ"?"in":"out"}">${sign}${fmt(r.amount)}</td>
+      <td><button class="del" title="ลบ" aria-label="ลบรายการ" onclick="del('${esc(r.id)}')">✕</button></td></tr>`}).join("")
+    :`<tr><td colspan="6" class="empty">ยังไม่มีรายการในเดือนนี้ เริ่มบันทึกรายการแรกได้ที่แบบฟอร์มด้านข้าง</td></tr>`;
+}
+
+$("month").onchange=render;
+$("date").value=today();$("month").value=today().slice(0,7);
+fillCats();load();
+</script>
+</body>
+</html>
